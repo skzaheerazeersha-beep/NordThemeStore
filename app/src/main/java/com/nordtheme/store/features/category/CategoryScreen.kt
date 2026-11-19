@@ -52,9 +52,10 @@ fun CategoryScreen(
         "car" to Color(0xFFE65100), "god" to Color(0xFFE53935), "panda" to Color(0xFF29B6F6),
         "dark" to Color(0xFF7E57C2), "ios" to Color(0xFF26C6DA), "black" to Color(0xFF9CCC65),
         "cute" to Color(0xFFFFCA28)
+    )
     LazyColumn(
         modifier = Modifier.fillMaxSize().background(palette.background),
-        contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 96.dp), ,
+        contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 96.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item { SearchPillBar(hint = "anime", onClick = onSearchClick) }
