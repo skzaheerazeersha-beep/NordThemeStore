@@ -80,7 +80,7 @@ fun HomeScreen(
         }
     }
 
-    val shortcuts = remember(selectedTab) {
+    val shortcuts: List<ShortcutUi> = remember(selectedTab) {
         when (selectedTab) {
             HomeSubTab.Home -> listOf(
                 ShortcutUi("cute", "Cute", Icons.Outlined.Extension, Color(0xFFFF8C00)),
