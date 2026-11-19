@@ -54,7 +54,7 @@ fun CategoryScreen(
         "cute" to Color(0xFFFFCA28)
     LazyColumn(
         modifier = Modifier.fillMaxSize().background(palette.background),
-        contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 96.dp),
+        contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 96.dp), ,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item { SearchPillBar(hint = "anime", onClick = onSearchClick) }
