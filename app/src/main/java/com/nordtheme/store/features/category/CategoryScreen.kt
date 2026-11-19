@@ -52,4 +52,69 @@ fun CategoryScreen(
         "car" to Color(0xFFE65100), "god" to Color(0xFFE53935), "panda" to Color(0xFF29B6F6),
         "dark" to Color(0xFF7E57C2), "ios" to Color(0xFF26C6DA), "black" to Color(0xFF9CCC65),
         "cute" to Color(0xFFFFCA28)
-    )
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().background(palette.background),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item { SearchPillBar(hint = "anime", onClick = onSearchClick) }
+        item {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                listOf("Themes", "Font").forEach { tab ->
+                    val selected = tab == activeSection
+                    Column(Modifier.padding(horizontal = 24.dp).clickable { activeSection = tab }, horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(tab, color = if (selected) palette.textPrimary else palette.textMuted, fontSize = 16.sp, fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal)
+                        Spacer(Modifier.height(6.dp))
+                        Box(Modifier.width(36.dp).height(2.5.dp).background(if (selected) palette.textPrimary else Color.Transparent))
+                    }
+                }
+            }
+        }
+        item {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                RankTile("TRENDING", Color(0xFFFF5F4D), Color(0xFFE53935), Icons.Outlined.LocalFireDepartment, Modifier.weight(1f)) { onCategoryClick("Trending $activeSection", "trending") }
+                RankTile("TOP", Color(0xFFFFAE2B), Color(0xFFF57C00), Icons.Outlined.BarChart, Modifier.weight(1f)) { onCategoryClick("Top $activeSection", "top") }
+                RankTile("NEW", Color(0xFF4CA9FF), Color(0xFF1E88E5), Icons.Outlined.AutoAwesome, Modifier.weight(1f)) { onCategoryClick("New $activeSection", "new") }
+            }
+        }
+        item {
+            Text("Colour", color = palette.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(10.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                colorTiles.chunked(3).forEach { row ->
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        row.forEach { tile ->
+                            Box(
+                                modifier = Modifier.weight(1f).aspectRatio(1.05f).clip(RoundedCornerShape(12.dp))
+                                    .background(Brush.verticalGradient(listOf(tile.top, tile.bottom)))
+                                    .clickable { onCategoryClick(tile.label, tile.label) }.padding(10.dp)
+                            ) {
+                                Icon(tile.icon, null, tint = Color.White.copy(alpha = 0.28f), modifier = Modifier.size(54.dp).align(Alignment.TopEnd))
+                                Text(tile.label, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.BottomStart))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        item {
+            Text("$activeSection you may like", color = palette.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(10.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                tagChips.forEach { (label, tint) ->
+                    Box(Modifier.clip(RoundedCornerShape(8.dp)).background(tint.copy(alpha = 0.18f)).clickable { onCategoryClick(label, label) }.padding(horizontal = 14.dp, vertical = 8.dp)) {
+                        Text(label, color = tint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RankTile(title: String, top: Color, bottom: Color, icon: ImageVector, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Box(modifier.aspectRatio(1f).clip(RoundedCornerShape(12.dp)).background(Brush.verticalGradient(listOf(top, bottom))).clickable(onClick = onClick).padding(10.dp)) {
+        Icon(icon, null, tint = Color.White.copy(alpha = 0.45f), modifier = Modifier.size(22.dp).align(Alignment.TopEnd))
+        Text(title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.align(Alignment.BottomStart))
+    }
+}
