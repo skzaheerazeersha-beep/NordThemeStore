@@ -29,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -44,6 +43,10 @@ import com.nordtheme.store.core.theme.LocalNordPalette
 import com.nordtheme.store.core.theme.NordThemeStoreTheme
 import com.nordtheme.store.data.local.SeedCatalog
 import com.nordtheme.store.data.local.StoreDatabase
+import com.nordtheme.store.features.category.CategoryScreen
+import com.nordtheme.store.features.home.HomeScreen
+import com.nordtheme.store.features.omg.ExploreScreen
+import com.nordtheme.store.features.profile.MeScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,7 +91,11 @@ private fun NordThemeStoreApp() {
         }
     }
 
-    val allItems by dao.observeAll().collectAsState(initial = emptyList())
+    val entityList by dao.observeAll().collectAsState(initial = emptyList())
+    val storeItems = remember(entityList) { entityList.map { it.toDomain() } }
+    val favoritesCount = remember(storeItems) { storeItems.count { it.isFavorite } }
+    val downloadsCount = remember(storeItems) { storeItems.count { it.isDownloaded } }
+
     val showBottomBar = currentRoute in setOf(
         Routes.Home.route,
         Routes.Category.route,
@@ -108,16 +115,68 @@ private fun NordThemeStoreApp() {
             modifier = Modifier.fillMaxSize()
         ) {
             composable(Routes.Home.route) {
-                PlaceholderTab("Home", "${allItems.size} catalog items loaded from Room")
+                HomeScreen(
+                    items = storeItems,
+                    onSearchClick = { navController.navigate(Routes.Search.route) },
+                    onItemClick = { id -> navController.navigate(Routes.Detail.create(id)) },
+                    onSeeAllClick = { title, key -> navController.navigate(Routes.CategoryGrid.create(title, key)) }
+                )
             }
             composable(Routes.Category.route) {
-                PlaceholderTab("Category", "Themes & Fonts categories ready")
+                CategoryScreen(
+                    onSearchClick = { navController.navigate(Routes.Search.route) },
+                    onCategoryClick = { title, key -> navController.navigate(Routes.CategoryGrid.create(title, key)) }
+                )
             }
             composable(Routes.OMG.route) {
-                PlaceholderTab("Explore", "Curated collections ready")
+                ExploreScreen(
+                    items = storeItems,
+                    onItemClick = { id -> navController.navigate(Routes.Detail.create(id)) },
+                    onSeeAllClick = { title, key -> navController.navigate(Routes.CategoryGrid.create(title, key)) }
+                )
             }
             composable(Routes.Me.route) {
-                PlaceholderTab("Me", "Profile, Downloads & Favorites ready")
+                MeScreen(
+                    favoritesCount = favoritesCount,
+                    downloadsCount = downloadsCount,
+                    onSearchClick = { navController.navigate(Routes.Search.route) },
+                    onDownloadsClick = { navController.navigate(Routes.Downloads.route) },
+                    onFavoritesClick = { navController.navigate(Routes.Favorites.route) },
+                    onSettingsClick = { navController.navigate(Routes.Settings.route) },
+                    onResourceClick = { title -> navController.navigate(Routes.CategoryGrid.create(title, title)) }
+                )
+            }
+            composable(Routes.Search.route) {
+                SimpleSubScreen("Search", "Phase 4 will add live search & Trending/Climbing boards") {
+                    navController.popBackStack()
+                }
+            }
+            composable(Routes.Downloads.route) {
+                SimpleSubScreen("Downloads & Purchased", "Phase 4 will list offline downloads") {
+                    navController.popBackStack()
+                }
+            }
+            composable(Routes.Favorites.route) {
+                SimpleSubScreen("Favorites", "Phase 4 will list saved items") {
+                    navController.popBackStack()
+                }
+            }
+            composable(Routes.Settings.route) {
+                SimpleSubScreen("Settings", "Phase 7 will add ColorOS 17 compatibility & theme toggle") {
+                    navController.popBackStack()
+                }
+            }
+            composable(Routes.Detail.route) { entry ->
+                val id = entry.arguments?.getString("itemId").orEmpty()
+                SimpleSubScreen("Detail: $id", "Phase 4 will add full-screen preview pager & Buy/Apply bar") {
+                    navController.popBackStack()
+                }
+            }
+            composable(Routes.CategoryGrid.route) { entry ->
+                val title = entry.arguments?.getString("title").orEmpty()
+                SimpleSubScreen(title, "Phase 4 will add the 3-column grid") {
+                    navController.popBackStack()
+                }
             }
         }
 
@@ -140,26 +199,26 @@ private fun NordThemeStoreApp() {
 }
 
 @Composable
-private fun PlaceholderTab(title: String, subtitle: String) {
+private fun SimpleSubScreen(title: String, subtitle: String, onBack: () -> Unit) {
     val palette = LocalNordPalette.current
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(palette.background)
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = title,
-            color = palette.textPrimary,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Text(text = title, color = palette.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
+        Text(text = subtitle, color = palette.textMuted, fontSize = 14.sp)
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = subtitle,
-            color = palette.textMuted,
-            fontSize = 14.sp
+            text = "← Go Back",
+            color = palette.coralCta,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(onClick = onBack)
         )
     }
 }
