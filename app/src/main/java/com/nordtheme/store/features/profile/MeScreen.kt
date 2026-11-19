@@ -1,21 +1,88 @@
+package com.nordtheme.store.features.profile
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.nordtheme.store.core.theme.LocalNordPalette
+import com.nordtheme.store.core.ui.RankPromoRow
+
+@Composable
+fun MeScreen(
+    favoritesCount: Int, downloadsCount: Int,
+    onSearchClick: () -> Unit, onDownloadsClick: () -> Unit,
+    onFavoritesClick: () -> Unit, onSettingsClick: () -> Unit,
+    onResourceClick: (String) -> Unit
+) {
+    val p = LocalNordPalette.current
+    LazyColumn(
+        Modifier.fillMaxSize().background(p.background),
+        contentPadding = PaddingValues(top = 12.dp, bottom = 96.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
         item {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-                    .clip(RoundedCornerShape(16.dp)).background(palette.surfaceCard).padding(16.dp)
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), Arrangement.End) {
+                TopCircleBtn(Icons.Outlined.Search, "Search", onSearchClick)
+                Spacer(Modifier.width(10.dp))
+                TopCircleBtn(Icons.Outlined.Download, "Downloads", onDownloadsClick)
+                Spacer(Modifier.width(10.dp))
+                TopCircleBtn(Icons.Outlined.Settings, "Settings", onSettingsClick)
+            }
+        }
+        item {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(56.dp).clip(CircleShape).background(Color(0xFF262629)), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Outlined.Person, null, tint = Color.White, modifier = Modifier.size(30.dp))
+                }
+                Spacer(Modifier.width(14.dp))
+                Column {
+                    Text("OnePlus Nord 6", color = p.textPrimary, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+                    Text("ColorOS 17.0 • $downloadsCount downloads", color = p.textMuted, fontSize = 13.sp)
+                }
+            }
+        }
+        item {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(RoundedCornerShape(16.dp)).background(p.surfaceCard).padding(vertical = 16.dp, horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("My resources", color = palette.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                    Text("All >", color = palette.textMuted, fontSize = 13.sp, modifier = Modifier.clickable { onDownloadsClick() })
+                QuickActionItem(Icons.Outlined.MonetizationOn, "My coins") { onResourceClick("Coins") }
+                QuickActionItem(Icons.Outlined.ReceiptLong, "Purchased") { onDownloadsClick() }
+                QuickActionItem(Icons.Outlined.BookmarkBorder, "Favorites ($favoritesCount)") { onFavoritesClick() }
+                QuickActionItem(Icons.Outlined.StarOutline, "Following") { onResourceClick("Following") }
+            }
+        }
+        item {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(RoundedCornerShape(16.dp)).background(p.surfaceCard).padding(16.dp)) {
+                Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                    Text("My resources", color = p.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                    Text("All >", color = p.textMuted, fontSize = 13.sp, modifier = Modifier.clickable { onDownloadsClick() })
                 }
                 Spacer(Modifier.height(16.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
                     ResourceBadge(Icons.Outlined.AutoFixHigh, "Themes", Color(0xFFFF3B30)) { onResourceClick("Themes") }
                     ResourceBadge(Icons.Outlined.TextFields, "Fonts", Color(0xFFFF8C00)) { onResourceClick("Font") }
                     ResourceBadge(Icons.Outlined.Wallpaper, "Wallpapers", Color(0xFFFFB300)) { onResourceClick("Wallpapers") }
                     ResourceBadge(Icons.Outlined.PlayCircleFilled, "Live\nwallpaper", Color(0xFF007AFF)) { onResourceClick("Motion wallpapers") }
                 }
                 Spacer(Modifier.height(16.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+                Row(Modifier.fillMaxWidth(), Arrangement.Start) {
                     ResourceBadge(Icons.Outlined.Notifications, "Video\nringtone", Color(0xFFFF453A)) { onResourceClick("Video ringtones") }
                     Spacer(Modifier.width(28.dp))
                     ResourceBadge(Icons.Outlined.Widgets, "Icon packs", Color(0xFF34C759)) { onResourceClick("Icons") }
@@ -23,27 +90,24 @@
             }
         }
         item {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-                    .clip(RoundedCornerShape(16.dp)).background(palette.surfaceCard).padding(16.dp)
-            ) {
-                Text("My services", color = palette.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(RoundedCornerShape(16.dp)).background(p.surfaceCard).padding(16.dp)) {
+                Text("My services", color = p.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(16.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                Row(Modifier.fillMaxWidth(), Arrangement.SpaceEvenly) {
                     QuickActionItem(Icons.Outlined.MonetizationOn, "Orders") { onDownloadsClick() }
                     QuickActionItem(Icons.Outlined.ConfirmationNumber, "Coupons") { onResourceClick("Coupons") }
                     QuickActionItem(Icons.Outlined.HeadsetMic, "Support") { onSettingsClick() }
                 }
             }
         }
-        item { RankPromoRow(onRankClick = { onResourceClick("Top Ranked") }, onFeaturedClick = { onResourceClick("Collections") }) }
+        item { RankPromoRow({ onResourceClick("Top Ranked") }, { onResourceClick("Collections") }) }
     }
 }
 
 @Composable
 private fun TopCircleBtn(icon: ImageVector, desc: String, onClick: () -> Unit) {
     val p = LocalNordPalette.current
-    Box(Modifier.size(38.dp).clip(CircleShape).background(p.surfaceCard).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(Modifier.size(38.dp).clip(CircleShape).background(p.surfaceCard).clickable(onClick = onClick), Alignment.Center) {
         Icon(icon, desc, tint = p.textPrimary, modifier = Modifier.size(20.dp))
     }
 }
@@ -59,13 +123,47 @@ private fun QuickActionItem(icon: ImageVector, label: String, onClick: () -> Uni
 }
 
 @Composable
-private fun ResourceBadge(icon: ImageVector, label: String, bg: Color, onClick: () -> Unit) {
+
+cat << 'EOF' > app/src/main/java/com/nordtheme/store/features/omg/ExploreScreen.kt
+package com.nordtheme.store.features.omg
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.nordtheme.store.core.theme.LocalNordPalette
+import com.nordtheme.store.core.ui.PortraitItemCard
+import com.nordtheme.store.core.ui.SectionHeader
+import com.nordtheme.store.domain.model.StoreItem
+
+@Composable
+fun ExploreScreen(items: List<StoreItem>, onItemClick: (String) -> Unit, onSeeAllClick: (String, String) -> Unit) {
     val p = LocalNordPalette.current
-    Column(Modifier.width(72.dp).clickable(onClick = onClick), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.size(44.dp).clip(CircleShape).background(bg), contentAlignment = Alignment.Center) {
-            Icon(icon, label, tint = Color.White, modifier = Modifier.size(22.dp))
+    val sections = listOf("Selection" to items, "Animals" to items.reversed(), "Lovely" to items.sortedByDescending { it.favoritesCount })
+
+    LazyColumn(
+        Modifier.fillMaxSize().background(p.background),
+        contentPadding = PaddingValues(top = 14.dp, bottom = 96.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item { Text("Explore", color = p.textPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp)) }
+        sections.forEach { (title, list) ->
+            item(key = title) {
+                Column {
+                    SectionHeader(title, { onSeeAllClick(title, title) })
+                    Spacer(Modifier.height(6.dp))
+                    LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        items(list, key = { "${title}_${it.id}" }) { PortraitItemCard(it, { onItemClick(it.id) }) }
+                    }
+                }
+            }
         }
-        Spacer(Modifier.height(6.dp))
-        Text(label, color = p.textPrimary, fontSize = 11.sp, lineHeight = 14.sp, textAlign = TextAlign.Center)
     }
 }
