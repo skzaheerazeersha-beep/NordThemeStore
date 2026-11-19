@@ -22,7 +22,8 @@ import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.ThumbUp
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,9 +31,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.nordtheme.store.core.navigation.Routes
+import com.nordtheme.store.core.theme.LocalNordPalette
+import com.nordtheme.store.core.theme.NordThemeStoreTheme
+import com.nordtheme.store.data.local.SeedCatalog
+import com.nordtheme.store.data.local.StoreDatabase
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,78 +53,124 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT)
         )
         setContent {
-            MaterialTheme(
-                colorScheme = darkColorScheme(
-                    background = Color(0xFF000000),
-                    surface = Color(0xFF161618),
-                    onBackground = Color.White,
-                    onSurface = Color.White
-                )
-            ) {
-                ThemeStoreBootstrapShell()
+            NordThemeStoreTheme(darkTheme = true) {
+                NordThemeStoreApp()
             }
         }
     }
 }
 
-private enum class NavTab(
+private enum class BottomTab(
+    val route: String,
     val label: String,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector
 ) {
-    Home("Home", Icons.Filled.Home, Icons.Outlined.Home),
-    Category("Category", Icons.Filled.GridView, Icons.Outlined.GridView),
-    OMG("OMG", Icons.Filled.ThumbUp, Icons.Outlined.ThumbUp),
-    Me("Me", Icons.Filled.Person, Icons.Outlined.Person)
+    Home(Routes.Home.route, "Home", Icons.Filled.Home, Icons.Outlined.Home),
+    Category(Routes.Category.route, "Category", Icons.Filled.GridView, Icons.Outlined.GridView),
+    OMG(Routes.OMG.route, "OMG", Icons.Filled.ThumbUp, Icons.Outlined.ThumbUp),
+    Me(Routes.Me.route, "Me", Icons.Filled.Person, Icons.Outlined.Person)
 }
 
 @Composable
-private fun ThemeStoreBootstrapShell() {
-    var selectedTab by remember { mutableStateOf(NavTab.Home) }
+private fun NordThemeStoreApp() {
+    val context = LocalContext.current
+    val db = remember { StoreDatabase.getInstance(context) }
+    val dao = remember { db.storeDao() }
+    val palette = LocalNordPalette.current
+    val navController = rememberNavController()
+    val backStack by navController.currentBackStackEntryAsState()
+    val currentRoute = backStack?.destination?.route
+
+    LaunchedEffect(Unit) {
+        if (dao.count() == 0) {
+            dao.insertAllIgnore(SeedCatalog.initialItems())
+        }
+    }
+
+    val allItems by dao.observeAll().collectAsState(initial = emptyList())
+    val showBottomBar = currentRoute in setOf(
+        Routes.Home.route,
+        Routes.Category.route,
+        Routes.OMG.route,
+        Routes.Me.route
+    )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(palette.background)
             .systemBarsPadding()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+        NavHost(
+            navController = navController,
+            startDestination = Routes.Home.route,
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text(
-                text = "Nord Theme Store",
-                color = Color.White,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Active Tab: ${selectedTab.label}",
-                color = Color(0xFF8E8E93),
-                fontSize = 15.sp
-            )
+            composable(Routes.Home.route) {
+                PlaceholderTab("Home", "${allItems.size} catalog items loaded from Room")
+            }
+            composable(Routes.Category.route) {
+                PlaceholderTab("Category", "Themes & Fonts categories ready")
+            }
+            composable(Routes.OMG.route) {
+                PlaceholderTab("Explore", "Curated collections ready")
+            }
+            composable(Routes.Me.route) {
+                PlaceholderTab("Me", "Profile, Downloads & Favorites ready")
+            }
         }
 
-        FloatingGlassBottomBar(
-            selectedTab = selectedTab,
-            onTabSelected = { selectedTab = it },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 14.dp)
+        if (showBottomBar) {
+            FloatingGlassBottomBar(
+                currentRoute = currentRoute,
+                onNavigate = { route ->
+                    navController.navigate(route) {
+                        popUpTo(Routes.Home.route) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 14.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun PlaceholderTab(title: String, subtitle: String) {
+    val palette = LocalNordPalette.current
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = title,
+            color = palette.textPrimary,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = subtitle,
+            color = palette.textMuted,
+            fontSize = 14.sp
         )
     }
 }
 
 @Composable
 private fun FloatingGlassBottomBar(
-    selectedTab: NavTab,
-    onTabSelected: (NavTab) -> Unit,
+    currentRoute: String?,
+    onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val palette = LocalNordPalette.current
     val pillShape = RoundedCornerShape(32.dp)
     Row(
         modifier = modifier
@@ -122,26 +179,23 @@ private fun FloatingGlassBottomBar(
             .clip(pillShape)
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xCC2A2A2E),
-                        Color(0xE61A1A1D)
-                    )
+                    colors = listOf(palette.glassTop, palette.glassBottom)
                 )
             )
-            .border(0.75.dp, Color(0x33FFFFFF), pillShape)
+            .border(0.75.dp, palette.glassBorder, pillShape)
             .padding(horizontal = 10.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        NavTab.entries.forEach { tab ->
-            val isSelected = tab == selectedTab
+        BottomTab.entries.forEach { tab ->
+            val isSelected = currentRoute == tab.route
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
-                    ) { onTabSelected(tab) },
+                    ) { onNavigate(tab.route) },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -149,15 +203,15 @@ private fun FloatingGlassBottomBar(
                     Icon(
                         imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
                         contentDescription = tab.label,
-                        tint = if (isSelected) Color.White else Color(0xFFA0A0A6),
+                        tint = if (isSelected) palette.textPrimary else palette.textMuted,
                         modifier = Modifier.size(22.dp)
                     )
-                    if (tab == NavTab.Me) {
+                    if (tab == BottomTab.Me) {
                         Box(
                             modifier = Modifier
                                 .size(6.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFFF3B30))
+                                .background(palette.badgeRed)
                                 .align(Alignment.TopEnd)
                         )
                     }
@@ -165,7 +219,7 @@ private fun FloatingGlassBottomBar(
                 Spacer(modifier = Modifier.height(3.dp))
                 Text(
                     text = tab.label,
-                    color = if (isSelected) Color.White else Color(0xFFA0A0A6),
+                    color = if (isSelected) palette.textPrimary else palette.textMuted,
                     fontSize = 10.sp,
                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                 )
